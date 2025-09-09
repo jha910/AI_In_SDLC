@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CI/CD Optimizer</title>
+</head>
+<body>
+    <h2>CI/CD Optimizer</h2>
+    <textarea id="pipeline" rows="10" cols="60" placeholder="Paste your Jenkinsfile or CI/CD script here..."></textarea><br><br>
+    <button onclick="optimizePipeline()">Optimize</button>
+
+    <h3 id="risk"></h3>
+    <ul id="suggestions"></ul>
+    <pre id="optimized"></pre>
+
+    <script>
+        async function optimizePipeline() {
+            const pipeline = document.getElementById("pipeline").value;
+
+            const response = await fetch("http://127.0.0.1:8001/optimize-ci", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ pipeline: pipeline })
+            });
+
+            const result = await response.json();
+            document.getElementById("risk").innerText = "Build Risk: " + result.build_risk;
+
+            const suggestionsList = document.getElementById("suggestions");
+            suggestionsList.innerHTML = "";
+            result.suggestions.forEach(s => {
+                const li = document.createElement("li");
+                li.innerText = s;
+                suggestionsList.appendChild(li);
+            });
+
+            document.getElementById("optimized").innerText = JSON.stringify(result.optimized_pipeline, null, 2);
+        }
+    </script>
+</body>
+</html>

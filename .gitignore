@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.so
+*.dylib
+.venv/
+*.egg-info/
+*.pyo
+*.pyd
+*.whl
+.DS_Store
+.env

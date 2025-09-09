@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI Developer Productivity Suite</title>
+
+  <style>
+    /* ---------- Base ---------- */
+    :root{
+      --bg:#0f172a;
+      --panel:#1e293b;
+      --ink:#e2e8f0;
+      --ink-soft:#a5b4fc;
+      --brand:#3b82f6;
+      --brand-2:#9333ea;
+      --btn:#334155;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      margin:0;
+      padding:0;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    /* ---------- Heading ---------- */
+    h1{
+      text-align:center;
+      padding:20px;
+      margin:0;
+      color:#fff;
+      background: linear-gradient(90deg, #3b82f6, #9333ea);
+      box-shadow: 0 4px 10px rgba(0,0,0,.4);
+    }
+
+    /* ---------- Tabs header ---------- */
+    .tab-buttons{
+      display:flex;
+      justify-content:center;
+      gap:12px;
+      background:#1e293b;
+      padding:15px;
+      flex-wrap: wrap;
+    }
+    .tab-buttons button{
+      background: var(--btn);
+      color:#f1f5f9;
+      border:none;
+      padding:12px 20px;
+      margin:0 8px;
+      border-radius:8px;
+      cursor:pointer;
+      font-size:15px;
+      transition: all .3s ease;
+    }
+    .tab-buttons button:hover{
+      background:#3b82f6;
+      transform: scale(1.05);
+    }
+
+    /* ---------- Tab panels ---------- */
+    .tab{
+      display:none;
+      max-width: 1000px;
+      margin:30px auto;
+      background: var(--panel);
+      padding:25px;
+      border-radius:12px;
+      box-shadow: 0 6px 20px rgba(0,0,0,.5);
+      animation: fadeIn .4s ease-in-out;
+    }
+
+    textarea{
+      width:100%;
+      min-height:160px;
+      border-radius:10px;
+      border:none;
+      outline:none;
+      resize:vertical;
+      padding:12px;
+      background: var(--bg);
+      color: var(--ink);
+      font-size:14px;
+      margin-top:10px;
+    }
+
+    /* ---------- Action buttons ---------- */
+    .action{
+      margin-top:15px;
+      background:#3b82f6;
+      border:none;
+      padding:12px 20px;
+      color:white;
+      font-size:15px;
+      border-radius:8px;
+      cursor:pointer;
+      transition:.3s ease;
+    }
+    .action:hover{ background:#2563eb; transform: translateY(-2px); }
+
+    /* ---------- Section headings / lists / pre ---------- */
+    h2{ margin-top:0 }
+    h2, h3{ color:#38bdf8; }
+    ul{ margin-top:10px; padding-left:18px; }
+    ul li{
+      background:#334155;
+      margin:5px 0;
+      padding:10px;
+      border-radius:6px;
+      font-size:14px;
+    }
+
+    pre{
+      background: var(--bg);
+      padding:15px;
+      border-radius:10px;
+      font-size:13px;
+      white-space:pre-wrap;
+      word-wrap:break-word;
+      margin-top:15px;
+      color: var(--ink-soft);
+    }
+
+    /* ---------- Grafana frame ---------- */
+    .grafana-wrap{
+      width:100%;
+      height:70vh;          /* fills most of the screen height; adjust if needed */
+      border-radius:10px;
+      overflow:hidden;
+      box-shadow: 0 6px 20px rgba(0,0,0,.5);
+      background:#0b1220;
+    }
+    .grafana-wrap iframe{
+      width:100%;
+      height:100%;
+      border:0;
+    }
+
+    @keyframes fadeIn{
+      from{ opacity:0; transform: translateY(10px); }
+      to{ opacity:1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <h1>AI Developer Productivity Suite</h1>
+
+  <!-- Tabs header -->
+  <div class="tab-buttons">
+    <button onclick="showTab('bug')">🐞 Bug Detection</button>
+    <button onclick="showTab('ci')">⚙️ CI/CD Optimizer</button>
+    <button onclick="showTab('grafana')">📊 Grafana Integration</button>
+  </div>
+
+  <!-- Bug Detection Tab -->
+  <div id="bug" class="tab">
+    <h2>🐞 Bug Detection</h2>
+    <textarea id="code" rows="5" cols="50" placeholder="Paste your functions here..."></textarea><br><br>
+    <button class="action" onclick="checkBug()">Check Bug</button>
+    <h3 id="result"></h3>
+  </div>
+
+  <!-- CI/CD Optimizer Tab -->
+  <div id="ci" class="tab">
+    <h2>⚙️ CI/CD Optimizer</h2>
+    <textarea id="pipeline" rows="10" cols="60" placeholder="Paste your Jenkinsfile or CI/CD script here..."></textarea><br><br>
+    <button class="action" onclick="optimizePipeline()">Optimize</button>
+    <h3 id="risk">Build Risk:</h3>
+    <ul id="suggestions"></ul>
+    <pre id="optimized"></pre>
+  </div>
+
+  <!-- Grafana Integration Tab -->
+  <div id="grafana" class="tab">
+    <h2>📊 Grafana Integration</h2>
+    <p>Live dashboard embedded from Grafana. (Public link must be reachable from this browser.)</p>
+    <iframe 
+  src="http://localhost:3000/public-dashboards/518a8ea53b5c46d5a491fb1e4b52969a"
+  frameborder="0"
+  style="width:100%; height:600px;"
+  loading="lazy">
+</iframe>
+
+  </div>
+  
+
+  <script>
+    // ====== Config: set your API endpoints in one place ======
+    const API_BUG = 'http://127.0.0.1:8000/predict';     // change if your bug API runs elsewhere
+    const API_CI  = 'http://127.0.0.1:8010/optimize-ci'; // change if your CI API runs elsewhere
+  
+    // Show a given tab and hide others
+    function showTab(tabId){
+      document.querySelectorAll('.tab').forEach(tab => tab.style.display = 'none');
+      document.getElementById(tabId).style.display = 'block';
+      try { localStorage.setItem('activeTab', tabId); } catch(e){}
+    }
+  
+    // Default view (restore last tab if available)
+    (function(){
+      let start = 'bug';
+      try { start = localStorage.getItem('activeTab') || 'bug'; } catch(e){}
+      showTab(start);
+  
+      // Optional: seed with small examples so you can click right away
+      const $code = document.getElementById('code');
+      if ($code && !$code.value.trim()){
+        $code.value = `function multiply(a, b) {\n  return a / b; // ❌ should be a * b\n}`;
+      }
+      const $pipe = document.getElementById('pipeline');
+      if ($pipe && !$pipe.value.trim()){
+        $pipe.value = `build: npm install\ntest: npm test`;
+      }
+    })();
+  
+    // Small helpers
+    const setLoading = (el, isLoading) => el.disabled = !!isLoading;
+    async function jsonOrThrow(res){
+      let bodyText = '';
+      try { bodyText = await res.text(); } catch {}
+      let json;
+      try { json = bodyText ? JSON.parse(bodyText) : null; } catch { json = null; }
+      if (!res.ok) {
+        const detail = (json && (json.detail || json.message)) || bodyText || `HTTP ${res.status}`;
+        throw new Error(detail);
+      }
+      return json ?? {};
+    }
+  
+    // ----- API calls -----
+    async function checkBug(){
+      const btn = event?.currentTarget;
+      const resultEl = document.getElementById('result');
+      try{
+        setLoading(btn, true);
+        resultEl.textContent = 'Checking…';
+        const code = document.getElementById('code').value;
+        const res = await fetch(API_BUG, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code })
+        });
+        const data = await jsonOrThrow(res);
+        resultEl.textContent = `Prediction: ${data.prediction ?? 'Unknown'}`;
+      }catch(err){
+        resultEl.textContent = `Error: ${err.message}`;
+      }finally{
+        setLoading(btn, false);
+      }
+    }
+  
+    async function optimizePipeline(){
+      const btn = event?.currentTarget;
+      const riskEl = document.getElementById('risk');
+      const suggEl = document.getElementById('suggestions');
+      const outEl  = document.getElementById('optimized');
+  
+      try{
+        setLoading(btn, true);
+        riskEl.textContent = 'Build Risk: …';
+        suggEl.innerHTML = '';
+        outEl.textContent = '';
+  
+        const pipeline = document.getElementById('pipeline').value;
+        const res = await fetch(API_CI, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pipeline })
+        });
+        const data = await jsonOrThrow(res);
+  
+        riskEl.textContent = `Build Risk: ${data.build_risk ?? 'N/A'}`;
+        (data.suggestions ?? []).forEach(s => {
+          const li = document.createElement('li');
+          li.textContent = s;
+          suggEl.appendChild(li);
+        });
+        outEl.textContent = JSON.stringify(data.optimized_pipeline ?? {}, null, 2);
+      }catch(err){
+        riskEl.textContent = `Error: ${err.message}`;
+      }finally{
+        setLoading(btn, false);
+      }
+    }
+  </script>
+  
+</body>
+</html>
